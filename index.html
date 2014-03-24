@@ -13,7 +13,8 @@ body {
   pointer-events: all;
 }
 #states {
-  fill: #aaa;
+  fill: #333;
+  fill-opacity: 0.6;
 }
 #states .active {
   fill: orange;
@@ -47,9 +48,17 @@ span {
 }
 
 .line {
-  fill: none;
-  stroke: steelblue;
-  stroke-width: 1.5px;
+  fill: steelblue;
+  opacity: 0.8;
+/*  stroke: white;
+  stroke-dasharray: 5,5;
+  stroke-width: 3px;*/
+}
+
+.title{
+  font-size: 18px;
+  fill: white;
+  /*dx: 2em;*/
 }
 
 </style>
@@ -67,10 +76,9 @@ span {
   <div class=".d3-tip">
   </div>
   <div style="width: 620px;">
-    <div style="text-align:center;">
-      <h2>Abortion Statistics</h2>
-    </div>
+    <h2 style="text-align:center;">Abortion Statistics</h2>
     <div map-vis></div>
+    <h3 style="text-align:center;">Abortions per 1,000 Women Ages 15-44</h3>
     <div line-chart></div>
     <p style="float: right;">Source: <a target="_blank" href="http://www.sentencingproject.org/doc/publications/fd_State_Level_Estimates_of_Felon_Disen_2010.pdf">The Sentencing Project</a></p>
   </div>
@@ -142,7 +150,7 @@ app.directive('mapVis', function(){
         .projection(projection);
 
       var margin = {
-        top: 50,
+        top: 20,
         left: 50,
         right: 10,
         bottom: 10
@@ -203,7 +211,7 @@ app.directive('lineChart',
           height = 200;
 
         var margin = {
-          top: 50,
+          top: 10,
           left: 50,
           right: 10,
           bottom: 25
@@ -221,13 +229,15 @@ app.directive('lineChart',
 
         var yAxis = d3.svg.axis()
           .scale(y)
+          // .tickFormat(d3.format("%"))
           .orient("left");
 
-        var line = d3.svg.line()
+        var line = d3.svg.area()
           .x(function(d) {
             return x(d.date);
           })
-          .y(function(d) {
+          .y0(height)
+          .y1(function(d) {
             return y(d.val);
           });
 
@@ -241,40 +251,100 @@ app.directive('lineChart',
         var xAxisG = svg.append("g")
           .attr("class", "x axis")
           .attr("transform", "translate(0," + height + ")")
-          // .call(xAxis);
 
         var yAxisG = svg.append("g")
           .attr("class", "y axis")
-          // .call(yAxis)
 
         var path = svg.append("path")
+
+
+        var titleG = svg.append("g")
+          .attr("transform","translate(" + [width-50,10] + ")")
+
+        var titleRect = titleG.append("rect")
+          .attr({
+            width: 0,
+            height: 25,
+            fill: "#222",
+            opacity: .8,
+            stroke: "none"
+          })
+          // .attr("fill","black")
+          // .attr("fill-opacity",0.5)
+
+        var title = titleG.append("text")
+          .attr("class","title")
+          .attr("dx","-.5em")
+          .attr("text-anchor","end")
           // .datum(localData)
           // .attr("class", "line")
           // .attr("d", line);
 
+          // yAxisG.append("text")
+          //   .attr("transform", "rotate(-90)")
+          //   .attr("y", 6)
+          //   .attr("dy", ".71em")
+          //   .style("text-anchor", "end")
+          //   .text("Abortions per 1,000 Women ($)");
+
+          var oldU = 100;
 
         scope.$watch("state", function(newVal) {
 
           if(newVal==null) return;
 
-          var localData = scope.lineData[newVal];
+          title.transition().duration(150)
+            .style("fill-opacity", 0)
+            .attr("dy",".5em")
 
-          x.domain(d3.extent(localData, function(d) {
-            return d.date;
-          }));
+          title.transition().delay(150)
+            .duration(0)
+            .attr("dy","1.5em")
+            .text(newVal)
+            .each('end',function(){
 
-          y.domain(d3.extent(localData, function(d) {
-            return d.val;
-          }));
+              var delA = 0,
+              delB = 300;
 
-          yAxisG.transition().duration(250).call(yAxis);
+              if(u < oldU) {
+                delA = 300;
+                delB = 0;
+              }
 
-          xAxisG.transition().duration(250).call(xAxis);
+              var u = d3.select(this).node().getComputedTextLength()+18;
 
-          path.datum(localData)
-            .transition().duration(350)
-            .attr("class", "line")
-            .attr("d", line);
+              titleRect.transition().delay(delA).duration(300)
+                .ease("elastic")
+                .attr("width",u)
+                .attr("x",-u)
+
+              d3.select(this).transition().duration(300).delay(delB)
+              .ease("elastic")
+              .style("fill-opacity",1)
+              .attr("dy","1em")
+
+              oldU = u
+
+              var localData = scope.lineData[newVal];
+
+              x.domain(d3.extent(localData, function(d) {
+                return d.date;
+              }));
+
+              y.domain(d3.extent(localData, function(d) {
+                return d.val;
+              }));
+
+              yAxisG.transition().duration(250).call(yAxis);
+
+              xAxisG.transition().duration(250).call(xAxis);
+
+              path.datum(localData)
+                .transition().duration(350)
+                .attr("class", "line")
+                .attr("d", line);
+            })
+
 
         });
 
