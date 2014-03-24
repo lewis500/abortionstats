@@ -331,9 +331,13 @@ app.directive('lineChart',
                 return d.date;
               }));
 
-              y.domain(d3.extent(localData, function(d) {
-                return d.val;
-              }));
+              // y.domain([0, d3.max(localData, function(d) {
+              //   return d.val;
+              // })]);
+
+            y.domain(d3.extent(localData, function(d) {
+              return d.val;
+            }));
 
               yAxisG.transition().duration(250).call(yAxis);
 
