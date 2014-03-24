@@ -170,7 +170,7 @@ app.directive('mapVis', function(){
         .attr("stroke-width", "2px")
         .attr("stroke-opacity", 0.2);
 
-      stateG.on("click", function(d){
+      stateG.on("mouseover", function(d){
         scope.$apply(function(){
 
           // console.log(d.name)
