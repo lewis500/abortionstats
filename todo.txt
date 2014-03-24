@@ -1,0 +1,6 @@
+get angular libraries
+DOWNLOAD LIBRARIES
+MAKE LINE CHART DIRECTIVE
+GET RID OF DONUT CHART PARTS
+set up ng-app
+
