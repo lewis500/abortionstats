@@ -2,6 +2,8 @@
 <meta charset="utf-8">
 <link href='http://fonts.googleapis.com/css?family=Fenix' rel='stylesheet' type='text/css'>
 <!-- <link rel="stylesheet" href="tooltip.css"> -->
+
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 <style>
 body {
   font-family: Fenix, serif;
@@ -39,101 +41,170 @@ span {
   stroke: none;
   stroke-width: 3px;
 }
-
-.axis path,
-.axis line {
+.axis path, .axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
-
 .line {
   fill: steelblue;
   opacity: 0.8;
-/*  stroke: white;
+  /*  stroke: white;
   stroke-dasharray: 5,5;
   stroke-width: 3px;*/
 }
-
-.title{
-  font-size: 18px;
-  fill: white;
+.title {
+  font-size: 24px;
+  fill: black;
   /*dx: 2em;*/
 }
-
 </style>
 <!-- <link rel="stylesheet" href="//rawgithub.com/Caged/d3-tip/master/examples/example-styles.css"> -->
 <script src="http://d3js.org/d3.v3.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <script src="http://d3js.org/colorbrewer.v1.min.js"></script>
 <script src="libraries/angular.min.js"></script>
+<script src="libraries/ui-bootstrap-custom-tpls-0.10.0.min.js"></script>
 
 <!-- <script src="d3-tip.js"></script> -->
 
 
 <body ng-app="mainApp" ng-controller="mainCtrl">
 
-  <div class=".d3-tip">
-  </div>
-  <div style="width: 620px;">
+
+  <!-- <form name="myForm" >
+  <input type="radio" ng-model="which" value="counseling">  Counseling</div>
+  <input type="radio" ng-model="which" value="insurance"> Insurance
+  <input type="radio" ng-model="which" value="parent"> Parent Involvement
+ </form> -->
+  <!-- <div class=".d3-tip"> -->
+  <!-- </div> -->
+  <div style="width: 620px;" >
     <h2 style="text-align:center;">Abortion Statistics</h2>
+      <div class="btn-group col-md-offset-5" style="margin-left: 150px">
+        <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'">Counseling</button>
+        <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'parent'">Parental Involvement</button>
+        <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'insurance'">Insurance</button>
+      </div>
+      
     <div map-vis></div>
     <h3 style="text-align:center;">Abortions per 1,000 Women Ages 15-44</h3>
     <div line-chart></div>
-    <p style="float: right;">Source: <a target="_blank" href="http://www.sentencingproject.org/doc/publications/fd_State_Level_Estimates_of_Felon_Disen_2010.pdf">The Sentencing Project</a></p>
+    <p style="float: right;">Source: <a target="_blank" href="http://www.sentencingproject.org/doc/publications/fd_State_Level_Estimates_of_Felon_Disen_2010.pdf">The Sentencing Project</a>
+    </p>
   </div>
-    
+
 </body>
 
 <script src="map.js"></script>
 <script src="rates.js"></script>
 
 <script>
+var app = angular.module('mainApp', ['ui.bootstrap'])
 
-var app = angular.module('mainApp', [])
+var controller = app.controller('mainCtrl', ['$scope',
+  function(scope) {
 
-app.controller('mainCtrl', ['$scope', function(scope){
+    var restrictionById = d3.map();
 
-  var restrictionById = d3.map();
+    var color = d3.scale.ordinal().domain([0, 1, 2, 3]).range(['rgb(254,229,217)', 'rgb(252,174,145)', 'rgb(251,106,74)', 'rgb(222,45,38)', 'rgb(165,15,21)'])
 
-  var color = d3.scale.ordinal().domain([1, 2, 3, 4, 5]).range(['rgb(254,229,217)', 'rgb(252,174,145)', 'rgb(251,106,74)', 'rgb(222,45,38)', 'rgb(165,15,21)'])
+    // var c = ['rgb(254,229,217)', 'rgb(252,174,145)', 'rgb(251,106,74)', 'rgb(222,45,38)', 'rgb(165,15,21)'];
 
-  restrictions.forEach(function(d) {
-    restrictionById.set(d.id, color(+d.restriction));
-  });
+    // var counselColor = {
+    //   "Mandated counseling includes information designed to discourage abortion": c[3],
+    //   "State imposes waiting period between counseling and abortion": c[4],
+    //   "Woman must make two trips: one for abortion counseling and another for the procedure": c[5]
+    // };
 
-  us.objects.states.geometries.forEach(function(d) {
-    d.properties = restrictions.filter(function(v) {
-      return +v.id == +d.id;
-    })[0];
-  });
+    //   var parentColor = {
+    //   "Parent must be notified before an abortion": c[3],
+    //   "Parent must consent to an abortion": c[4],
+    //  "Parent must consent and be notified before an abortion": c[5]
+    // };
 
-  scope.us = us;
+    var counselingKeys = d3.keys(restrictions[0]).slice(3, 6);
+    var parentKeys = d3.keys(restrictions[0]).slice(6, 9);
+    var insuranceKeys = d3.keys(restrictions[0]).slice(9, 10)
 
-  var lineData = {};
+    insuranceKeys.push("Insurance may only cover in cases of life endangerment, severe health, rape, incest or fetal impairment");
 
-  var parseDate = d3.time.format("%Y").parse;
 
-  d3.keys(rates[0])
-    .filter(function(name) {
-      return name !== "date"
-    })
-    .forEach(function(key) {
-      lineData[key] = rates.map(function(d) {
-        return {
-          date: parseDate(new String(d.date)),
-          val: d[key]
-        }
+    var rData = [];
+
+    restrictions.forEach(function(s) {
+
+      s["Insurance may only cover in cases of life endangerment, severe health, rape, incest or fetal impairment"] = (s.name == "Utah") ? " " : "Yes"
+
+      s.counseling = {};
+      s.parent = {};
+      s.insurance = {};
+      var j = 0;
+      counselingKeys.forEach(function(key) {
+        if (s[key] != " ") j++
+        s["counseling"][key] = (s[key] == " ") ? "no" : s[key];
       });
+      s["counseling"]["color"] = color(j);
+      var k = 0;
+      parentKeys.forEach(function(key) {
+        if (s[key] != " ") {
+          k++
+        }
+        s["parent"][key] = (s[key] == " ") ? "no" : s[key];
+      });
+      s.parent.count = k;
+      s["parent"]["color"] = color(k);
+
+      var m = 0;
+      insuranceKeys.forEach(function(key) {
+        if (s[key] != " ") {
+          m++
+        }
+        s["parent"][key] = (s[key] == " ") ? "no" : s[key];
+      });
+      s.insurance.count = m;
+      s["insurance"]["color"] = color(m);
+
     });
 
-  scope.lineData = lineData;  
+    console.log(counselingKeys)
+    console.log(parentKeys)
 
-  scope.state="Alabama";
-  
-}]);
+    us.objects.states.geometries.forEach(function(d) {
+      d.properties = restrictions.filter(function(v) {
+        return +v.id == +d.id;
+      })[0];
+    });
 
-app.directive('mapVis', function(){
+    scope.us = us;
+
+    var lineData = {};
+
+    var parseDate = d3.time.format("%Y").parse;
+
+    d3.keys(rates[0])
+      .filter(function(name) {
+        return name !== "date"
+      })
+      .forEach(function(key) {
+        lineData[key] = rates.map(function(d) {
+          return {
+            date: parseDate(new String(d.date)),
+            val: d[key]
+          }
+        });
+      });
+
+    scope.lineData = lineData;
+
+    scope.state = "Alabama";
+
+    scope.which = "insurance"
+
+  }
+]);
+
+app.directive('mapVis', function() {
   // Runs during compile
   return {
     restrict: 'A', // E = Element, A = Attribute, C = Class, M = Comment
@@ -144,7 +215,7 @@ app.directive('mapVis', function(){
 
       var projection = d3.geo.albersUsa()
         .scale(750)
-        .translate([width / 2, height / 2 ]);
+        .translate([width / 2, height / 2]);
 
       var GeoPath = d3.geo.path()
         .projection(projection);
@@ -167,6 +238,7 @@ app.directive('mapVis', function(){
 
       var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+
       var stateG = g.append("g")
         .attr("id", "states")
         .selectAll("path")
@@ -176,18 +248,23 @@ app.directive('mapVis', function(){
         .attr("d", GeoPath)
         .attr("stroke", "black")
         .attr("stroke-width", "2px")
-        .attr("stroke-opacity", 0.2);
+        .attr("stroke-opacity", 0.2)
 
-      stateG.on("mouseover", function(d){
-        scope.$apply(function(){
 
-          // console.log(d.name)
+      stateG.on("mouseover", function(d) {
+        scope.$apply(function() {
 
           scope.state = d.properties.name;
 
         })
       });
 
+      scope.$watch("which", function(newVal) {
+        stateG.attr("fill", function(d) {
+          var k = d.properties[newVal];
+          return (k == null) ? "#777" : k["color"];
+        })
+      });
 
       g.append("path")
         .datum(topojson.mesh(scope.us, scope.us.objects.states, function(a, b) {
@@ -195,12 +272,13 @@ app.directive('mapVis', function(){
         }))
         .attr("id", "state-borders")
         .attr("d", GeoPath);
-    }
-  };
-});
+
+    } //end link
+  }; //end return
+}); //end directive
 
 
-app.directive('lineChart', 
+app.directive('lineChart',
   function() {
 
     // Runs during compile
@@ -229,8 +307,8 @@ app.directive('lineChart',
 
         var yAxis = d3.svg.axis()
           .scale(y)
-          // .tickFormat(d3.format("%"))
-          .orient("left");
+        // .tickFormat(d3.format("%"))
+        .orient("left");
 
         var line = d3.svg.area()
           .x(function(d) {
@@ -259,7 +337,7 @@ app.directive('lineChart',
 
 
         var titleG = svg.append("g")
-          .attr("transform","translate(" + [width-50,10] + ")")
+          .attr("transform", "translate(" + [width - 50, 10] + ")")
 
         var titleRect = titleG.append("rect")
           .attr({
@@ -269,61 +347,44 @@ app.directive('lineChart',
             opacity: .8,
             stroke: "none"
           })
-          // .attr("fill","black")
-          // .attr("fill-opacity",0.5)
+        // .attr("fill","black")
+        // .attr("fill-opacity",0.5)
 
         var title = titleG.append("text")
-          .attr("class","title")
-          .attr("dx","-.5em")
-          .attr("text-anchor","end")
-          // .datum(localData)
-          // .attr("class", "line")
-          // .attr("d", line);
+          .attr("class", "title")
+          .attr("dx", "-.5em")
+          .attr("text-anchor", "end")
+        // .datum(localData)
+        // .attr("class", "line")
+        // .attr("d", line);
 
-          // yAxisG.append("text")
-          //   .attr("transform", "rotate(-90)")
-          //   .attr("y", 6)
-          //   .attr("dy", ".71em")
-          //   .style("text-anchor", "end")
-          //   .text("Abortions per 1,000 Women ($)");
+        // yAxisG.append("text")
+        //   .attr("transform", "rotate(-90)")
+        //   .attr("y", 6)
+        //   .attr("dy", ".71em")
+        //   .style("text-anchor", "end")
+        //   .text("Abortions per 1,000 Women ($)");
 
-          var oldU = 100;
+        var oldU = 100;
 
         scope.$watch("state", function(newVal) {
 
-          if(newVal==null) return;
+          if (newVal == null) return;
 
           title.transition().duration(150)
             .style("fill-opacity", 0)
-            .attr("dy",".5em")
+            .attr("dy", ".5em")
 
           title.transition().delay(150)
             .duration(0)
-            .attr("dy","1.5em")
+            .attr("dy", "1.5em")
             .text(newVal)
-            .each('end',function(){
+            .each('end', function() {
 
-              var delA = 0,
-              delB = 300;
-
-              if(u < oldU) {
-                delA = 300;
-                delB = 0;
-              }
-
-              var u = d3.select(this).node().getComputedTextLength()+18;
-
-              titleRect.transition().delay(delA).duration(300)
+              d3.select(this).transition().duration(300)
                 .ease("elastic")
-                .attr("width",u)
-                .attr("x",-u)
-
-              d3.select(this).transition().duration(300).delay(delB)
-              .ease("elastic")
-              .style("fill-opacity",1)
-              .attr("dy","1em")
-
-              oldU = u
+                .style("fill-opacity", 1)
+                .attr("dy", "1em")
 
               var localData = scope.lineData[newVal];
 
@@ -335,9 +396,9 @@ app.directive('lineChart',
               //   return d.val;
               // })]);
 
-            y.domain(d3.extent(localData, function(d) {
-              return d.val;
-            }));
+              y.domain(d3.extent(localData, function(d) {
+                return d.val;
+              }));
 
               yAxisG.transition().duration(250).call(yAxis);
 
