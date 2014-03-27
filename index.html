@@ -5,33 +5,41 @@
 
 <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 <style>
+
 body {
   font-family: Fenix, serif;
   font-size: 11;
   /*width: 620px;*/
 }
+
 .background {
   fill: none;
   pointer-events: all;
 }
-
 /*#states .active {
   fill: orange;
 }*/
+ .state {
+  stroke: none;
+  stroke-width: 3px;
+}
 
-  .state{
-    stroke: none;
-    stroke-width: 3px;
+  #state-borders {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
   }
 
-#state-borders {
+.heldLine{
+  stroke: #333;
+  stroke-width: 2px;
+  stroke-dasharray: 2,2;
   fill: none;
-  stroke: #fff;
-  stroke-width: 1.5px;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  pointer-events: none;
 }
+
 .legendTitle {
   font-weight: bold;
 }
@@ -40,32 +48,56 @@ span {
   font-weight: bold;
   text-transform: uppercase;
 }
-.state {
+
+/*.state-area{
+  stroke: #222;
+  stroke-opacity: 0.3;
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+*/
+/*.state {
   stroke: none;
   stroke-width: 3px;
-}
+}*/
 .axis path, .axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
 .line {
-  fill: steelblue;
+  fill: #3699db;
   opacity: 0.8;
   /*  stroke: white;
   stroke-dasharray: 5,5;
   stroke-width: 3px;*/
 }
+
+.state-area{
+  stroke: black;
+  stroke-width: 2px;
+  stroke-opacity: 0.2;
+}
+
+.selected{
+  stroke-width: 2px;
+  stroke: #000;
+  fill: none;
+  stroke-opacity: 1;
+  stroke-dasharray: 2,2;
+  stroke-linejoin: round;
+
+}
+
 .title {
   font-size: 24px;
   fill: black;
   /*dx: 2em;*/
 }
-
-.btn-group button{
+.btn-group button {
   max-width: 100px;
 }
-
 </style>
 <!-- <link rel="stylesheet" href="//rawgithub.com/Caged/d3-tip/master/examples/example-styles.css"> -->
 <script src="http://d3js.org/d3.v3.js"></script>
@@ -90,11 +122,16 @@ span {
   <div style="width: 620px;">
     <h3 style="text-align:center;">Abortion Restrictions</h3>
     <div class="btn-group" style="margin-left: 75px">
-      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'">Mandated <br> Counseling</button>
-      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'parents'">Parental <br>Involvement</button>
-      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'public'">Public Health <br> Funding</button>
-      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'employees'">State Workers <br>Insurance</button>
-      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'insurance'">Private <br> Insurance</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'">Mandated
+        <br>Counseling</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'parents'">Parental
+        <br>Involvement</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'public'">Public Health
+        <br>Funding</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'employees'">State Workers
+        <br>Insurance</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'insurance'">Private
+        <br>Insurance</button>
 
     </div>
     <div map-vis></div>
@@ -116,7 +153,7 @@ var legendKey = {
     0: "No restriciton",
     1: "Mandated counseling w/ info designed to discourage abortion",
     2: "Waiting period b/w counseling and abortion",
-    3: "In-person counseling required"
+    3: "In-person counseling + waiting period necessitates two trips"
   },
   parents: {
     0: "No restriction",
@@ -151,14 +188,12 @@ var legendTitleText = {
   "public": "Under what circumstances do state programs fund abortions?"
 };
 
-
-
 var app = angular.module('mainApp', ['ui.bootstrap'])
 
 var controller = app.controller('mainCtrl', ['$scope',
   function(scope) {
 
-    scope.color = d3.scale.ordinal().domain([0, 1, 2, 3, 4]).range(['rgb(254,229,217)','rgb(252,174,145)','rgb(251,106,74)','rgb(222,45,38)','rgb(165,15,21)'])
+    scope.color = d3.scale.ordinal().domain([0, 1, 2, 3, 4]).range(['rgb(254,229,217)', 'rgb(252,174,145)', 'rgb(251,106,74)', 'rgb(222,45,38)', 'rgb(165,15,21)'])
 
     us.objects.states.geometries.forEach(function(d) {
       d.properties = restrictions.filter(function(v) {
@@ -187,9 +222,15 @@ var controller = app.controller('mainCtrl', ['$scope',
 
     scope.lineData = lineData;
 
-    scope.state = "Alabama";
+    scope.state = "US";
 
     scope.which = "parents";
+
+    scope.held = false;
+
+    scope.heldState = "US";
+
+    scope.parseDate = parseDate;
 
   }
 ]);
@@ -222,8 +263,27 @@ app.directive('mapVis', function() {
       var svg = d3.select(el[0]).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
+        .attr("cursor","pointer")
+
+      var background = svg.append("rect")
+          .attr("class", "background")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .on("mouseover", function(d){
+          scope.$apply(function(v){
+            scope.state = "US";
+          })
+        }).on("click", function(d) {
+
+        scope.$apply(function() {
+          scope.heldState = "US";
+        });
+
+      });
 
       var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
 
       var stateG = g.append("g")
         .attr("id", "states")
@@ -232,17 +292,16 @@ app.directive('mapVis', function() {
         .enter().append("path")
         .attr("class", "state-area")
         .attr("d", GeoPath)
-        .attr("stroke", "black")
-        .attr("stroke-width", "2px")
-        .attr("stroke-opacity", 0.2)
+        // .attr("stroke", "black")
+        // .attr("stroke-width", "2px")
+        // .attr("stroke-opacity", 0.2)
 
       var legendG = svg.append("g")
-        .attr("transform","translate(" + [width, height - 105] + ")")
+        .attr("transform", "translate(" + [width, height - 105] + ")")
 
       var legendTitle = legendG.append("text")
-        .attr("class","legendTitle")
+        .attr("class", "legendTitle")
         .style("text-anchor", "end")
-
 
       var legend = legendG.selectAll(".legend")
         .data(d3.range(0, 5))
@@ -253,16 +312,33 @@ app.directive('mapVis', function() {
         });
 
       var legendRec = legend.append("rect")
-        .attr("x",  - 18)
+        .attr("x", -18)
         .attr("width", 18)
         .attr("height", 18)
         .style("fill", color);
 
       var legendText = legend.append("text")
-        .attr("x",  - 24)
+        .attr("x", -24)
         .attr("y", 9)
         .attr("dy", ".35em")
         .style("text-anchor", "end")
+
+      stateG.on("click", function(d) {
+
+        d3.select(".selected").remove();
+        g.datum(d)
+          .append("path")
+          // .attr("class", "state-area")
+          .attr("d", GeoPath)
+          .attr("class","selected")
+
+        // d3.select(this).classed("selected",true);
+
+        scope.$apply(function() {
+          scope.heldState = d.properties.name;
+        });
+
+      });
 
 
       stateG.on("mouseover", function(d) {
@@ -275,10 +351,10 @@ app.directive('mapVis', function() {
 
         var count = d3.keys(legendKey[newVal]).length
 
-        legend.data(d3.range(0,count))
-        
-        legend.style("opacity",function(d,i){
-          return i<count ? 1 : 0
+        legend.data(d3.range(0, count))
+
+        legend.style("opacity", function(d, i) {
+          return i < count ? 1 : 0
         })
 
         stateG.attr("fill", function(d) {
@@ -301,6 +377,8 @@ app.directive('mapVis', function() {
         .attr("id", "state-borders")
         .attr("d", GeoPath);
 
+
+
     } //end link
   }; //end return
 }); //end directive
@@ -314,17 +392,21 @@ app.directive('lineChart',
       restrict: 'A', // E = Element, A = Attribute, C = Class, M = Comment
       link: function(scope, el, attrs) {
         var width = 550,
-          height = 200;
+          height = 250;
+
+        var parseDate = scope.parseDate;
 
         var margin = {
-          top: 10,
+          top: 45,
           left: 50,
           right: 10,
           bottom: 25
         };
 
         var x = d3.time.scale()
-          .range([0, width]);
+          .range([0, width])
+          .domain([parseDate("1973"), parseDate("2011")]);
+
 
         var y = d3.scale.linear()
           .range([height, 0]);
@@ -346,6 +428,15 @@ app.directive('lineChart',
             return y(d.val);
           });
 
+
+        var line2 = d3.svg.line()
+          .x(function(d) {
+            return x(d.date);
+          })
+          .y(function(d) {
+            return y(d.val);
+          });
+
         var svg = d3.select(el[0])
           .append("svg")
           .attr("width", width + margin.left + margin.right)
@@ -362,73 +453,143 @@ app.directive('lineChart',
 
         var path = svg.append("path")
 
+        var path2 = svg.append("path")
+          .attr("fill","none")
 
         var titleG = svg.append("g")
-          .attr("transform", "translate(" + [width - 50, 10] + ")")
+          .attr("class","g-titleG")
+          .attr("transform", "translate(" + [width - 300, -40] + ")");
 
-        var titleRect = titleG.append("rect")
+        var titleGSub1 = titleG.append("g")
+          .attr("class","g-titleGSub1")
+
+        var titleRect1 = titleGSub1.append("rect")
           .attr({
-            width: 0,
+            width: 25,
             height: 25,
-            fill: "#222",
+            fill: "#3699db",
             opacity: .8,
+            y: 3,
             stroke: "none"
-          })
+          });
 
-
-        var title = titleG.append("text")
+        var title1 = titleGSub1.append("text")
           .attr("class", "title")
           .attr("dx", "-.5em")
-          .attr("text-anchor", "end")
+          .attr("text-anchor", "end");
+
+        var titleGSub2 = titleG.append("g")
+          .attr("class","g-titleGSub2")
+          .attr("transform","translate(" + [200,0] + ")")
+
+        var titleRect2 = titleGSub2.append("rect")
+          .attr({
+            width: 25,
+            height: 25,
+            fill: "none",
+            "stroke-width": 2,
+            y: 3,
+            stroke: "#333",
+            "stroke-dasharray": "2, 2"
+          });
+
+        var title2 = titleGSub2.append("text")
+          .attr("class", "title")
+          .attr("dx", "-.5em")
+          .attr("text-anchor", "end");
+
+        var boundFinder = function(l){
+            var j = l.concat(heldData)
+            return [0, d3.max(j, function(d) {
+                return d.val;
+              })];
+        };
 
         scope.$watch("state", function(newVal) {
 
           if (newVal == null) return;
 
-          title.transition().duration(150)
+          title1.transition().duration(150)
             .style("fill-opacity", 0)
             .attr("dy", ".5em")
 
-          title.transition().delay(150)
+          title1.transition().delay(150)
             .duration(0)
             .attr("dy", "1.5em")
             .text(newVal)
-            .each('end', function() {
+            
+          title1.transition().duration(350).delay(200)
+            .ease("elastic")
+            .style("fill-opacity", 1)
+            .attr("dy", "1em")
 
-              d3.select(this).transition().duration(300)
-                .ease("elastic")
-                .style("fill-opacity", 1)
-                .attr("dy", "1em")
+          var localData = scope.lineData[newVal];
 
-              var localData = scope.lineData[newVal];
 
-              x.domain(d3.extent(localData, function(d) {
-                return d.date;
-              }));
+          // y.domain([0, d3.max(localData, function(d) {
+          //   return d.val;
+          // })]);
 
-              // y.domain([0, d3.max(localData, function(d) {
-              //   return d.val;
-              // })]);
+          y.domain(boundFinder(localData));
 
-              y.domain(d3.extent(localData, function(d) {
+          yAxisG.transition().duration(250).call(yAxis);
+
+          xAxisG.transition().duration(250).call(xAxis);
+
+          path.datum(localData)
+            .transition().duration(350)
+            .attr("class", "line")
+            .attr("d", line);
+
+          if(heldData.length > 0 ) path2.transition().duration(350).attr("d", line2);
+
+        }); //end watch
+
+        var heldData = [];
+
+        scope.$watch('heldState', function(newVal){
+          if(newVal == null) return;
+
+          title2.transition().duration(150)
+            .style("fill-opacity", 0)
+            .attr("dy", ".5em")
+
+          title2.transition().delay(150)
+            .duration(0)
+            .attr("dy", "1.5em")
+            .text(newVal)
+            
+          title2.transition().duration(350).delay(200)
+            .ease("elastic")
+            .style("fill-opacity", 1)
+            .attr("dy", "1em")
+
+          heldData = scope.lineData[newVal];
+
+          y.domain([0,d3.max(heldData, function(d) {
                 return d.val;
-              }));
+          })]);
 
-              yAxisG.transition().duration(250).call(yAxis);
+          path.datum(heldData)
+            .transition().duration(350)
+            .attr("class", "line")
+            .attr("d", line);
+             
+          path2.datum(heldData)
+            .transition().duration(350)
+            .attr("class", "heldLine")
+            .attr("d", line2);
 
-              xAxisG.transition().duration(250).call(xAxis);
+          yAxisG.transition().duration(250).call(yAxis);
 
-              path.datum(localData)
-                .transition().duration(350)
-                .attr("class", "line")
-                .attr("d", line);
-            })
-
-
-        });
+        })
 
       }
     };
   }
 );
+
 </script>
+
+
+
