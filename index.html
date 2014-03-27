@@ -303,6 +303,9 @@ app.directive('mapVis', function() {
         .enter().append("path")
         .attr("class", "state-area")
         .attr("d", GeoPath)
+        .attr("fill", function(d) {
+          return color(d.properties[scope.which]);
+        });
         // .attr("stroke", "black")
         // .attr("stroke-width", "2px")
         // .attr("stroke-opacity", 0.2)
@@ -368,7 +371,7 @@ app.directive('mapVis', function() {
           return i < count ? 1 : 0
         })
 
-        stateG.attr("fill", function(d) {
+        stateG.transition().duration(300).delay(function(d, i) { return i/49 * 150; }).attr("fill", function(d) {
           return color(d.properties[newVal]);
         });
 
