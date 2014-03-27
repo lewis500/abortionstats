@@ -14,13 +14,16 @@ body {
   fill: none;
   pointer-events: all;
 }
-#states {
-  fill: #333;
-  fill-opacity: 0.6;
-}
-#states .active {
+
+/*#states .active {
   fill: orange;
-}
+}*/
+
+  .state{
+    stroke: none;
+    stroke-width: 3px;
+  }
+
 #state-borders {
   fill: none;
   stroke: #fff;
@@ -58,6 +61,11 @@ span {
   fill: black;
   /*dx: 2em;*/
 }
+
+.btn-group button{
+  max-width: 100px;
+}
+
 </style>
 <!-- <link rel="stylesheet" href="//rawgithub.com/Caged/d3-tip/master/examples/example-styles.css"> -->
 <script src="http://d3js.org/d3.v3.js"></script>
@@ -73,24 +81,27 @@ span {
 
 
   <!-- <form name="myForm" >
-  <input type="radio" ng-model="which" value="counseling">  Counseling</div>
+  <input type="radio" ng-model="which" value="counseling">  counseling</div>
   <input type="radio" ng-model="which" value="insurance"> Insurance
   <input type="radio" ng-model="which" value="parent"> Parent Involvement
  </form> -->
   <!-- <div class=".d3-tip"> -->
   <!-- </div> -->
-  <div style="width: 620px;" >
+  <div style="width: 620px;">
     <h2 style="text-align:center;">Abortion Statistics</h2>
-      <div class="btn-group col-md-offset-5" style="margin-left: 150px">
-        <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'">Counseling</button>
-        <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'parent'">Parental Involvement</button>
-        <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'insurance'">Insurance</button>
-      </div>
-      
+    <div class="btn-group" style="margin-left: 75px">
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'">Mandated <br> Counseling</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'parents'">Parental <br>Involvement</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'public'">Public Health <br> Funding</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'employees'">State Workers <br>Insurance</button>
+      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'insurance'">Private <br> Insurance</button>
+
+    </div>
     <div map-vis></div>
+
     <h3 style="text-align:center;">Abortions per 1,000 Women Ages 15-44</h3>
     <div line-chart></div>
-    <p style="float: right;">Source: <a target="_blank" href="http://www.sentencingproject.org/doc/publications/fd_State_Level_Estimates_of_Felon_Disen_2010.pdf">The Sentencing Project</a>
+    <p style="float: right;">Source: <a target="_blank" href="http://www.guttmacher.org/datacenter/table.jsp#">Guttmacher Institute</a>
     </p>
   </div>
 
@@ -100,75 +111,54 @@ span {
 <script src="rates.js"></script>
 
 <script>
+var legendKey = {
+  counseling: {
+    0: "No restriciton",
+    1: "Mandated counseling w/ info designed to discourage abortion",
+    2: "Waiting period b/w counseling and abortion",
+    3: "In-person counseling required"
+  },
+  parents: {
+    0: "No restriction",
+    1: "One parent notified",
+    2: "Both parents notified",
+    3: "One parent must consent",
+    4: "Both parents must consent"
+  },
+  "insurance": {
+    0: "No restriction",
+    1: "Life endangerment, severe health risk, rape, incest or fetal impairment",
+    2: "Life endangerment",
+  },
+  employees: {
+    0: "In any case",
+    1: "In limited circumstances",
+    2: "Never"
+  },
+  "public": {
+    0: "State pays for all abortions",
+    1: "Life endangerment, rape, incest or other circumstances",
+    2: "Life endangerment, rape, or incest",
+    3: "Life endangerment"
+  }
+};
+
+var legendTitleText = {
+  counseling: "What rules govern pre-abortion counseling?",
+  parents: "How involved must parents be for a minor's abortion?",
+  "insurance": "When may private insurance cover abortions?",
+  employees: "Are abortions covered by state workers' insurance?",
+  "public": "Under what circumstances do state programs fund abortions?"
+};
+
+
+
 var app = angular.module('mainApp', ['ui.bootstrap'])
 
 var controller = app.controller('mainCtrl', ['$scope',
   function(scope) {
 
-    var restrictionById = d3.map();
-
-    var color = d3.scale.ordinal().domain([0, 1, 2, 3]).range(['rgb(254,229,217)', 'rgb(252,174,145)', 'rgb(251,106,74)', 'rgb(222,45,38)', 'rgb(165,15,21)'])
-
-    // var c = ['rgb(254,229,217)', 'rgb(252,174,145)', 'rgb(251,106,74)', 'rgb(222,45,38)', 'rgb(165,15,21)'];
-
-    // var counselColor = {
-    //   "Mandated counseling includes information designed to discourage abortion": c[3],
-    //   "State imposes waiting period between counseling and abortion": c[4],
-    //   "Woman must make two trips: one for abortion counseling and another for the procedure": c[5]
-    // };
-
-    //   var parentColor = {
-    //   "Parent must be notified before an abortion": c[3],
-    //   "Parent must consent to an abortion": c[4],
-    //  "Parent must consent and be notified before an abortion": c[5]
-    // };
-
-    var counselingKeys = d3.keys(restrictions[0]).slice(3, 6);
-    var parentKeys = d3.keys(restrictions[0]).slice(6, 9);
-    var insuranceKeys = d3.keys(restrictions[0]).slice(9, 10)
-
-    insuranceKeys.push("Insurance may only cover in cases of life endangerment, severe health, rape, incest or fetal impairment");
-
-
-    var rData = [];
-
-    restrictions.forEach(function(s) {
-
-      s["Insurance may only cover in cases of life endangerment, severe health, rape, incest or fetal impairment"] = (s.name == "Utah") ? " " : "Yes"
-
-      s.counseling = {};
-      s.parent = {};
-      s.insurance = {};
-      var j = 0;
-      counselingKeys.forEach(function(key) {
-        if (s[key] != " ") j++
-        s["counseling"][key] = (s[key] == " ") ? "no" : s[key];
-      });
-      s["counseling"]["color"] = color(j);
-      var k = 0;
-      parentKeys.forEach(function(key) {
-        if (s[key] != " ") {
-          k++
-        }
-        s["parent"][key] = (s[key] == " ") ? "no" : s[key];
-      });
-      s.parent.count = k;
-      s["parent"]["color"] = color(k);
-
-      var m = 0;
-      insuranceKeys.forEach(function(key) {
-        if (s[key] != " ") {
-          m++
-        }
-        s["parent"][key] = (s[key] == " ") ? "no" : s[key];
-      });
-      s.insurance.count = m;
-      s["insurance"]["color"] = color(m);
-
-    });
-
-    console.log(counselingKeys)
-    console.log(parentKeys)
+    scope.color = d3.scale.ordinal().domain([0, 1, 2, 3, 4]).range(['rgb(254,229,217)','rgb(252,174,145)','rgb(251,106,74)','rgb(222,45,38)','rgb(165,15,21)'])
 
     us.objects.states.geometries.forEach(function(d) {
       d.properties = restrictions.filter(function(v) {
@@ -199,7 +189,7 @@ var controller = app.controller('mainCtrl', ['$scope',
 
     scope.state = "Alabama";
 
-    scope.which = "insurance"
+    scope.which = "parents";
 
   }
 ]);
@@ -209,35 +199,31 @@ app.directive('mapVis', function() {
   return {
     restrict: 'A', // E = Element, A = Attribute, C = Class, M = Comment
     link: function(scope, el, attr) {
+
+      var color = scope.color;
+
       var width = 550,
-        height = 330,
-        centered;
+        height = 500;
 
       var projection = d3.geo.albersUsa()
         .scale(750)
-        .translate([width / 2, height / 2]);
+        .translate([width / 2, height / 2 - 50]);
 
       var GeoPath = d3.geo.path()
         .projection(projection);
 
       var margin = {
-        top: 20,
+        top: 0,
         left: 50,
         right: 10,
-        bottom: 10
+        bottom: 2
       };
 
       var svg = d3.select(el[0]).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
 
-      // svg.append("rect")
-      //   .attr("class", "background")
-      //   .attr("width", width + margin.left + margin.right)
-      //   .attr("height", height + margin.top + margin.bottom)
-
       var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
       var stateG = g.append("g")
         .attr("id", "states")
@@ -250,20 +236,62 @@ app.directive('mapVis', function() {
         .attr("stroke-width", "2px")
         .attr("stroke-opacity", 0.2)
 
+      var legendG = svg.append("g")
+        .attr("transform","translate(" + [width, height - 105] + ")")
+
+      var legendTitle = legendG.append("text")
+        .attr("class","legendTitle")
+        .style("text-anchor", "end")
+
+
+      var legend = legendG.selectAll(".legend")
+        .data(d3.range(0, 5))
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) {
+          return "translate(0," + (5 + i * 20) + ")";
+        });
+
+      var legendRec = legend.append("rect")
+        .attr("x",  - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+      var legendText = legend.append("text")
+        .attr("x",  - 24)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+
 
       stateG.on("mouseover", function(d) {
         scope.$apply(function() {
-
           scope.state = d.properties.name;
-
         })
       });
 
       scope.$watch("which", function(newVal) {
-        stateG.attr("fill", function(d) {
-          var k = d.properties[newVal];
-          return (k == null) ? "#777" : k["color"];
+
+        var count = d3.keys(legendKey[newVal]).length
+
+        legend.data(d3.range(0,count))
+        
+        legend.style("opacity",function(d,i){
+          return i<count ? 1 : 0
         })
+
+        stateG.attr("fill", function(d) {
+          return color(d.properties[newVal]);
+        });
+
+        legendText.text(function(d) {
+          return legendKey[newVal][d];
+        });
+
+        legendTitle.text(legendTitleText[newVal])
+
+
       });
 
       g.append("path")
@@ -307,8 +335,7 @@ app.directive('lineChart',
 
         var yAxis = d3.svg.axis()
           .scale(y)
-        // .tickFormat(d3.format("%"))
-        .orient("left");
+          .orient("left");
 
         var line = d3.svg.area()
           .x(function(d) {
@@ -347,25 +374,12 @@ app.directive('lineChart',
             opacity: .8,
             stroke: "none"
           })
-        // .attr("fill","black")
-        // .attr("fill-opacity",0.5)
+
 
         var title = titleG.append("text")
           .attr("class", "title")
           .attr("dx", "-.5em")
           .attr("text-anchor", "end")
-        // .datum(localData)
-        // .attr("class", "line")
-        // .attr("d", line);
-
-        // yAxisG.append("text")
-        //   .attr("transform", "rotate(-90)")
-        //   .attr("y", 6)
-        //   .attr("dy", ".71em")
-        //   .style("text-anchor", "end")
-        //   .text("Abortions per 1,000 Women ($)");
-
-        var oldU = 100;
 
         scope.$watch("state", function(newVal) {
 
