@@ -51,6 +51,11 @@ span {
   text-transform: uppercase;
 }
 
+.y.axis line{
+  opacity: .25;
+  stroke-dasharray: 1, 1;
+}
+
 /*.state-area{
   stroke: #222;
   stroke-opacity: 0.3;
@@ -89,13 +94,13 @@ span {
   stroke: #000;
   fill: none;
   stroke-opacity: 1;
-  stroke-dasharray: 2,2;
+  stroke-dasharray: 3,3;
   stroke-linejoin: round;
 
 }
 
 .title {
-  font-size: 24px;
+  font-size: 18px;
   fill: black;
   /*dx: 2em;*/
 }
@@ -381,8 +386,6 @@ app.directive('mapVis', function() {
         .attr("id", "state-borders")
         .attr("d", GeoPath);
 
-
-
     } //end link
   }; //end return
 }); //end directive
@@ -401,7 +404,7 @@ app.directive('lineChart',
         var parseDate = scope.parseDate;
 
         var margin = {
-          top: 45,
+          top: 35,
           left: 50,
           right: 10,
           bottom: 25
@@ -417,11 +420,14 @@ app.directive('lineChart',
 
         var xAxis = d3.svg.axis()
           .scale(x)
-          .orient("bottom");
+          .orient("bottom")
 
         var yAxis = d3.svg.axis()
           .scale(y)
-          .orient("left");
+          .orient("left")
+          .tickSize(-width, 0, 0)
+          .ticks(5)
+
 
         var line = d3.svg.area()
           .x(function(d) {
@@ -431,7 +437,6 @@ app.directive('lineChart',
           .y1(function(d) {
             return y(d.val);
           });
-
 
         var line2 = d3.svg.line()
           .x(function(d) {
@@ -451,6 +456,8 @@ app.directive('lineChart',
         var xAxisG = svg.append("g")
           .attr("class", "x axis")
           .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
 
         var yAxisG = svg.append("g")
           .attr("class", "y axis")
@@ -462,15 +469,15 @@ app.directive('lineChart',
 
         var titleG = svg.append("g")
           .attr("class","g-titleG")
-          .attr("transform", "translate(" + [width - 300, -40] + ")");
+          .attr("transform", "translate(" + [width - 300, -30] + ")");
 
         var titleGSub1 = titleG.append("g")
           .attr("class","g-titleGSub1")
 
         var titleRect1 = titleGSub1.append("rect")
           .attr({
-            width: 25,
-            height: 25,
+            width: 20,
+            height: 20,
             fill: "#3699db",
             opacity: .8,
             y: 3,
@@ -488,13 +495,13 @@ app.directive('lineChart',
 
         var titleRect2 = titleGSub2.append("rect")
           .attr({
-            width: 25,
-            height: 25,
+            width: 20,
+            height: 20,
             fill: "none",
             "stroke-width": 2,
             y: 3,
             stroke: "#333",
-            "stroke-dasharray": "2, 2"
+            "stroke-dasharray": "3, 3"
           });
 
         var title2 = titleGSub2.append("text")
@@ -536,16 +543,17 @@ app.directive('lineChart',
 
           y.domain(boundFinder(localData));
 
-          yAxisG.transition().duration(250).call(yAxis);
-
-          xAxisG.transition().duration(250).call(xAxis);
 
           path.datum(localData)
             .transition().duration(350)
             .attr("class", "line")
             .attr("d", line);
 
+
           if(heldData.length > 0 ) path2.transition().duration(350).attr("d", line2);
+
+          yAxisG.transition().duration(250).call(yAxis);
+
 
         }); //end watch
 
