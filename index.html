@@ -140,7 +140,7 @@ span {
     </div>
     <div map-vis></div>
 
-    <h3 style="text-align:center;">Abortions per 1,000 Women Ages 15-44</h3>
+    <h4 style="text-align:center; margin-top: 0">Abortions per 1,000 Women Ages 15-44</h4>
     <div line-chart></div>
     <p style="float: right;">Source: <a target="_blank" href="http://www.guttmacher.org/datacenter/table.jsp#">Guttmacher Institute</a>
     </p>
@@ -248,17 +248,17 @@ app.directive('mapVis', function() {
       var color = scope.color;
 
       var width = 550,
-        height = 500;
+        height = 420;
 
       var projection = d3.geo.albersUsa()
-        .scale(750)
-        .translate([width / 2, height / 2 - 50]);
+        .scale(700)
+        .translate([width / 2, height / 2 +30]);
 
       var GeoPath = d3.geo.path()
         .projection(projection);
 
       var margin = {
-        top: 0,
+        top: 5,
         left: 50,
         right: 10,
         bottom: 2
@@ -301,7 +301,7 @@ app.directive('mapVis', function() {
         // .attr("stroke-opacity", 0.2)
 
       var legendG = svg.append("g")
-        .attr("transform", "translate(" + [width, height - 105] + ")")
+        .attr("transform", "translate(" + [width, 15] + ")")
 
       var legendTitle = legendG.append("text")
         .attr("class", "legendTitle")
@@ -396,7 +396,7 @@ app.directive('lineChart',
       restrict: 'A', // E = Element, A = Attribute, C = Class, M = Comment
       link: function(scope, el, attrs) {
         var width = 550,
-          height = 250;
+          height = 200;
 
         var parseDate = scope.parseDate;
 
