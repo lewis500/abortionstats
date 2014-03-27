@@ -19,6 +19,17 @@ body {
 /*#states .active {
   fill: orange;
 }*/
+
+.tip{
+  text-align: center;
+  color: #fff;
+  background-color: #555;
+  pointer-events: none;
+  /*opacity: 0.4;*/
+  padding: 8px;
+  max-width: 150px;
+  position: absolute;
+}
  
 
   #state-borders {
@@ -73,7 +84,7 @@ span {
 
 .heldLine {
   fill: #428bca;
-  opacity: 0.8;
+  opacity: 0.7;
   /*  stroke: white;
   stroke-dasharray: 5,5;
   stroke-width: 3px;*/
@@ -252,9 +263,18 @@ var controller = app.controller('mainCtrl', ['$scope',
 
 app.directive('mapVis', function() {
   // Runs during compile
+
+
   return {
     restrict: 'A', // E = Element, A = Attribute, C = Class, M = Comment
     link: function(scope, el, attr) {
+
+      var tooltip = d3.select("body")
+        .append("div").attr("class","tip")
+
+      tooltip.style("position", "absolute")
+        .style("z-index", "10")
+        .style("opacity", "0")
 
       var color = scope.color;
 
@@ -362,11 +382,73 @@ app.directive('mapVis', function() {
 
       });
 
+      var tooltipFill = function(d){
+        tooltip.style("visibility", "visible");
+        tooltip.html(
+          "<span>" + d.properties.name + "</span><br>" +
+          legendKey[scope.which][d.properties[scope.which]]
+          )
+
+        tooltip.transition().duration(120)
+          .style("opacity",.9)
+
+      };          
+
+
+      var tooltipLocate = function(that){
+        var q = d3.select(that).node().getBBox();
+        var r = {height: tooltip.node().offsetHeight, width: tooltip.node().offsetWidth };
+
+        var tm = {
+          n: {
+            top:  q.y - r.height/3,
+            left: q.x + q.width/2
+          },
+          w: {
+            top:  q.y + q.height/2 + r.height/2,
+            left: q.x - q.width/2 - r.width/2
+          },
+          e: {
+            top: q.y + q.height/2 + r.height/2,
+            left: q.x + q.width + r.width/2
+          },
+          s: {
+            top:  q.y  + q.height + r.height/3*2,
+            left: q.x + q.width/2
+          }
+
+        }
+
+        var loc = tm.n
+        if(loc.top < r.height ){
+          loc = tm.s;
+          if(loc.left < r.width ) loc = tm.e
+          if(loc.left > width - r.width - 100) loc = tm.w
+        }else{
+          if(loc.left < r.width ) loc = tm.e
+          if(loc.left > width - r.width - 100) loc = tm.w
+        }
+
+
+        tooltip
+          .style({
+            top: loc.top + "px",
+            left: loc.left + "px"
+          })
+
+
+
+      }
+
+
       stateG.on("mouseover", function(d) {
+        tooltipFill(d);
         scope.$apply(function() {
           scope.state = d.properties.name;
         })
-      });
+      })
+      .on("mousemove", function(){ return tooltipLocate(this); })
+      .on("mouseout", function(){return tooltip.transition().duration(100).style("opacity", "0");});
 
       scope.$watch("which", function(newVal) {
 
@@ -406,12 +488,15 @@ app.directive('mapVis', function() {
 app.directive('lineChart',
   function() {
 
+
     // Runs during compile
     return {
       restrict: 'A', // E = Element, A = Attribute, C = Class, M = Comment
       link: function(scope, el, attrs) {
         var width = 550,
           height = 200;
+  
+
 
         var parseDate = scope.parseDate;
 
@@ -474,8 +559,9 @@ app.directive('lineChart',
         var yAxisG = svg.append("g")
           .attr("class", "y axis")
 
-        var path2 = svg.append("path")
-        var path = svg.append("path")
+        var path2 = svg.append("path").attr("class", "heldLine")
+
+        var path = svg.append("path").attr("class","line")
 
 
         var titleG = svg.append("g")
@@ -556,7 +642,6 @@ app.directive('lineChart',
 
           path.datum(localData)
             .transition().duration(350)
-            .attr("class", "line")
             .attr("d", line);
 
 
@@ -599,7 +684,6 @@ app.directive('lineChart',
              
           path2.datum(heldData)
             .transition().duration(350)
-            .attr("class", "heldLine")
             .attr("d", line2);
 
           yAxisG.transition().duration(250).call(yAxis);
