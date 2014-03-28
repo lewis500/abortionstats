@@ -24,8 +24,8 @@ body {
 
 .tip{
   text-align: center;
-  color: #fff;
-  background-color: #555;
+  color: white;
+  background-color: #222;
   pointer-events: none;
   /*opacity: 0.4;*/
   padding: 8px;
@@ -97,14 +97,24 @@ span {
   stroke-linecap: round;
 }
 
+.hovered{
+  stroke: #333;
+  stroke-dasharray: 2, 4;
+  stroke-width: 2px;
+  stroke-opacity: 1;
+  stroke-linejoin: square;
+
+  /*stroke-dasharray: 3,3;*/
+}
+
 .selected{
-  fill: none;
+  /*fill: none;*/
   stroke-width: 3px;
   stroke: #333;
   stroke-opacity: 1;
   stroke-linejoin: round;
 
-  /*stroke-dasharray: 3,3;*/
+  stroke-dasharray: none;
   stroke-linejoin: round;
 
 }
@@ -115,15 +125,7 @@ span {
   stroke-opacity: 1;
 }
 
-.hovered{
-  stroke: #333;
-  stroke-dasharray: 2, 4;
-  stroke-width: 2px;
-  stroke-opacity: 1;
-  stroke-linejoin: square;
 
-  /*stroke-dasharray: 3,3;*/
-}
 
 
 .title {
@@ -166,7 +168,7 @@ span {
        Funding</button>
        <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'waiting'">Waiting Period</button>
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'age'" >Later Abortion</button>
-      <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'partial'" >Partial-Birth</button>
+<!--       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'partial'" >Partial-Birth</button> -->
 
     </div>
     <div map-vis></div>
@@ -332,24 +334,29 @@ app.directive('mapVis', function() {
 
       var background = svg.append("g")
           .attr("transform","translate(" + [90, 280] + ")")
-          .attr("class","selectedUS")
+          .attr("class","selected")
           .on("mouseover", function(d){
             scope.$apply(function(v){
               scope.state = "US";
             });
 
+            var sel = d3.select(this);
+            sel.classed("hovered",true);
 
 
           }).on("click", function(d) {
-            d3.select(".selected").remove();
 
-            d3.select(this).classed("selectedUS", true)
+            d3.select(".selected").classed('selected',false);
+
+            d3.select(this).classed("selected", true)
 
           scope.$apply(function() {
             scope.heldState = "US";
           });
 
-        });
+        }).on("mouseout", function(){
+        d3.select(".hovered").classed("hovered", false);
+      });
       
       background.append("rect")
           .attr("class", "background")
@@ -416,16 +423,10 @@ app.directive('mapVis', function() {
 
       stateG.on("click", function(d) {
 
-        d3.select(".selected").remove();
-        d3.select(".selectedUS").classed("selectedUS", false);
+        d3.select(".selected").classed("selected", false);
 
-        g.datum(d)
-          .append("path")
-          // .attr("class", "state-area")
-          .attr("d", GeoPath)
-          .attr("class","selected")
-
-        // d3.select(this).classed("selected",true);
+        var sel = d3.select(this);
+        sel.classed("selected",true);
 
         scope.$apply(function() {
           scope.heldState = d.properties.name;
@@ -434,14 +435,15 @@ app.directive('mapVis', function() {
       });
 
       var tooltipFill = function(d){
-        tooltip.style("visibility", "visible");
         tooltip.html(
           "<span>" + d.properties.name + "</span><br>" +
           legendKey[scope.which][d.properties[scope.which]]
-          )
+          );
 
-        tooltip.transition().duration(120)
-          .style("opacity",.9)
+        tooltip
+          .transition()
+          .duration(120)
+          .style("opacity",.9);
 
       };          
 
@@ -494,19 +496,22 @@ app.directive('mapVis', function() {
 
       stateG.on("mouseover", function(d) {
 
-        d3.select(".hovered").classed("hovered", false);
 
         var sel = d3.select(this);
         sel.moveToFront();
         sel.classed("hovered",true);
-        
+
         tooltipFill(d);
+        d3.select(".selected").moveToFront();
         scope.$apply(function() {
           scope.state = d.properties.name;
         })
       })
       .on("mousemove", function(){ return tooltipLocate(this); })
-      .on("mouseout", function(){return tooltip.transition().duration(100).style("opacity", "0");});
+      .on("mouseout", function(){
+        d3.select(".hovered").classed("hovered", false);
+        return tooltip.transition().duration(100).style("opacity", "0");
+      });
 
       scope.$watch("which", function(newVal) {
 
