@@ -65,7 +65,7 @@ var restrictions = [{"name":"Alabama","id":1,"counseling":1,"waiting":2,"parents
 {"name":"Pennsylvania","id":42,"counseling":1,"waiting":2,"parents":3,"public":2,"age":3,"partial":0},
 {"name":"Rhode Island","id":44,"counseling":0,"waiting":0,"parents":3,"public":2,"age":3,"partial":1},
 {"name":"South Carolina","id":45,"counseling":1,"waiting":2,"parents":3,"public":0,"age":2,"partial":3},
-{"name":"South Dakota","id":46,"counseling":1,"waiting":3,"parents":1,"public":2,"age":3,"partial":3},
+{"name":"South Dakota","id":46,"counseling":1,"waiting":3,"parents":1,"public":3,"age":3,"partial":3},
 {"name":"Tennessee","id":47,"counseling":0,"waiting":0,"parents":3,"public":2,"age":1,"partial":3},
 {"name":"Texas","id":48,"counseling":1,"waiting":2,"parents":3,"public":2,"age":4,"partial":0},
 {"name":"Utah","id":49,"counseling":1,"waiting":3,"parents":3,"public":1,"age":1,"partial":3},

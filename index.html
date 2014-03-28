@@ -158,8 +158,8 @@ span {
  </form> -->
   <!-- <div class=".d3-tip"> -->
   <!-- </div> -->
-  <div style="width: 620px;">
-    <h4 style="text-align:center;">Abortion Restrictions by State</h4>
+  <div style="width: 640px;">
+    <h3 style="text-align:center;">Abortion Restrictions by State</h3>
     <div class="btn-group-vertical" style="position: absolute; left: 450px; top: 85px;">
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'" >
         Counseling</button>
@@ -175,10 +175,8 @@ span {
     <div map-vis></div>
 
     <hr>
-    <!-- <hr> -->
-    
     <div line-chart>
-      <h4 style="position: absolute; left: 75px; top: 615px; color: black;">Abortions per 1,000 women aged 15-44*</h4>
+      <h4 style="position: absolute; left: 75px; top: 685px; color: black;">Abortions per 1,000 women aged 15-44*</h4>
     </div>
     <p style="float: left; margin-left: 40px;">*Numbers are based on state where abortion occurred, not necessarily where the patient is from.</p>
     <p style="float: right;">Source: <a target="_blank" href="http://www.guttmacher.org/datacenter/table.jsp#">Guttmacher Institute</a>
@@ -217,17 +215,18 @@ var legendKey = {
     0: "No requirement",
     1: "One parent notified",
     2: "Both parents notified",
-    3: "One parent must consent",
+    3: "One parent must consent*",
     4: "Both parents must consent"
   },
   "public": {
-    0: "Almost always",
+    0: "Funds all or most medically necessary abortions",
     1: "Life endangerment, rape, incest or other limited circumstances",
-    2: "Life endangerment, rape, or incest"
+    2: "Life endangerment, rape, or incest",
+    3: "Life endangerment"
   },
   age: {
     0: "No time restriction",
-    1: "Viability of fetus",
+    1: "Viability",
     2: "Third trimester",
     3: "24 weeks",
     4: "20 weeks"
@@ -241,11 +240,11 @@ var legendKey = {
 };
 
 var legendTitleText = {
-  waiting: "When counseling is required, what period is required between counseling and the procedure?",
-  counseling: "Does pre-abortion counseling include information designed to discourage abortion?",
+  waiting: "What is time requirement between counseling and procedure?",
+  counseling: "Does pre-abortion counseling include information discouraging abortion?",
   parents: "How involved must the parents be when minors seek abortions?",
   "public": "When may the state fund medically necessary abortions?",
-  age: "When is the latest a woman can receive an abortion unless her life or health are endangered?",
+  age: "When is the last point an abortion can be performed (except in cases life/health endangerment)?*",
   partial: "At what stage in pregnancy is partial-birth abortion prohibited?"
 };
 
@@ -314,7 +313,7 @@ app.directive('mapVis', function() {
       var color = scope.color;
 
       var width = 550,
-        height = 330;
+        height = 355;
 
       var projection = d3.geo.albersUsa()
         .scale(560)
@@ -327,7 +326,7 @@ app.directive('mapVis', function() {
         top: 10,
         left: 40,
         right: 10,
-        bottom: 0
+        bottom: 22
       };
 
       var svg = d3.select(el[0]).append("svg")
@@ -335,7 +334,7 @@ app.directive('mapVis', function() {
         .attr("height", height + margin.top + margin.bottom)
 
       var background = svg.append("g")
-          .attr("transform","translate(" + [90, 280] + ")")
+          .attr("transform","translate(" + [width - 105, 215] + ")")
           .attr("class","selected")
           .attr("cursor", "pointer")
           .on("mouseover", function(d){
@@ -363,12 +362,12 @@ app.directive('mapVis', function() {
       
       background.append("rect")
           .attr("class", "background")
-          .attr("width", 80)
+          .attr("width", 152)
           .attr("height", 30)
           .attr("rx", 4)
           .attr("ry",4)
 
-      background.append("text").text("US Total")
+      background.append("text").text("Compare US Total")
         .attr({
           fill: "#fff",
           stroke: "none",
@@ -394,8 +393,10 @@ app.directive('mapVis', function() {
         // .attr("stroke-width", "2px")
         // .attr("stroke-opacity", 0.2)
 
+
+
       var legendG = svg.append("g")
-        .attr("transform", "translate(" + [width, 255] + ")")
+        .attr("transform", "translate(" + [width, 280] + ")")
 
       var legendTitle = svg.append("text")
         .attr("x", 300)
@@ -486,13 +487,11 @@ app.directive('mapVis', function() {
           if(loc.left > width - r.width - 100) loc = tm.w
         }
 
-
         tooltip
           .style({
             top: loc.top + "px",
             left: loc.left + "px"
           })
-
 
 
       }
@@ -517,7 +516,29 @@ app.directive('mapVis', function() {
         return tooltip.transition().duration(100).style("opacity", "0");
       });
 
+      var astericks1 ,astericks2
+
       scope.$watch("which", function(newVal) {
+
+        if(newVal == "parents"){
+          astericks1 = svg.append("g")
+            .attr("transform", "translate(" + [width, 380] + ")")
+            .append("text").text("*law might also require both parents to be notified")
+            .attr("text-anchor","end")
+            .attr("font-size","13px")
+        }else{
+          if(astericks1) astericks1.remove();
+        }
+
+        if(newVal == "age"){
+          astericks2 = svg.append("g")
+            .attr("transform", "translate(" + [width, 380] + ")")
+            .append("text").text("*some states count from last menstrual period, others from fertilization")
+            .attr("text-anchor","end")
+            .attr("font-size","13px")
+        }else{
+          if(astericks2) astericks2.remove();
+        }
 
         var count = d3.keys(legendKey[newVal]).length
 
@@ -571,7 +592,7 @@ app.directive('lineChart',
           top: 25,
           left: 50,
           right: 10,
-          bottom: 20
+          bottom: 25
         };
 
         var x = d3.time.scale()
