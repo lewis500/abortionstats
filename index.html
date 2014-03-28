@@ -117,7 +117,12 @@ span {
 
 .hovered{
   stroke: #333;
-  stroke-dasharray: 3, 3;
+  stroke-dasharray: 2, 4;
+  stroke-width: 2px;
+  stroke-opacity: 1;
+  stroke-linejoin: square;
+
+  /*stroke-dasharray: 3,3;*/
 }
 
 
@@ -181,6 +186,17 @@ span {
 <script src="rates.js"></script>
 
 <script>
+  d3.selection.prototype.moveToFront = function() {
+    return this.each(function(){
+      this.parentNode.appendChild(this);
+    });
+  };
+</script>
+
+<script>
+
+
+
 var legendKey = {
   waiting: {
     0: "No waiting period",
@@ -320,7 +336,10 @@ app.directive('mapVis', function() {
           .on("mouseover", function(d){
             scope.$apply(function(v){
               scope.state = "US";
-            })
+            });
+
+
+
           }).on("click", function(d) {
             d3.select(".selected").remove();
 
@@ -474,6 +493,13 @@ app.directive('mapVis', function() {
 
 
       stateG.on("mouseover", function(d) {
+
+        d3.select(".hovered").classed("hovered", false);
+
+        var sel = d3.select(this);
+        sel.moveToFront();
+        sel.classed("hovered",true);
+        
         tooltipFill(d);
         scope.$apply(function() {
           scope.state = d.properties.name;
