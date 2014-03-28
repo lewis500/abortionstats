@@ -158,7 +158,7 @@ span {
   <!-- <div class=".d3-tip"> -->
   <!-- </div> -->
   <div style="width: 620px;">
-    <h4 style="text-align:center;">Abortion Restrictions</h4>
+    <h4 style="text-align:center;">Abortion Restrictions by State</h4>
     <div class="btn-group-vertical" style="position: absolute; left: 450px; top: 85px;">
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'" >
         Counseling</button>
@@ -218,12 +218,12 @@ var legendKey = {
     4: "Both parents must consent"
   },
   "public": {
-    0: "Most or all medically necessary abortions",
+    0: "Almost always",
     1: "Life endangerment, rape, incest or other limited circumstances",
     2: "Life endangerment, rape, or incest"
   },
   age: {
-    0: "No term restriction",
+    0: "No time restriction",
     1: "Viability",
     2: "Third trimester",
     3: "24 weeks",
@@ -240,8 +240,8 @@ var legendKey = {
 var legendTitleText = {
   waiting: "What waiting period is required between pre-abortion counseling and the procedure?",
   counseling: "Does pre-abortion counseling include information designed to discourage abortion?",
-  parents: "For a minor (under 18), seeking an abortion, how involved must the parents be?",
-  "public": "Under what circumstances can abortions be funded by public health programs?",
+  parents: "How involved must the parents be of minors seeking abortions?",
+  "public": "When may the state fund medically necessary abortions?",
   age: "At what stage in pregnancy is abortion limited to cases of life or health endangerment?",
   partial: "At what stage in pregnancy is partial-birth abortion prohibited?"
 };
