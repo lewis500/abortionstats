@@ -171,8 +171,9 @@ span {
 
     
     <div line-chart>
-      <h4 style="position: absolute; left: 75px; top: 575px; color: black;">Abortions per 1,000 Women Aged 15-44</h4>
+      <h4 style="position: absolute; left: 75px; top: 575px; color: black;">Abortions per 1,000 Women Aged 15-44*</h4>
     </div>
+    <p style="float: left; margin-left: 40px;">*by state of occurrence, rather than residence</p>
     <p style="float: right;">Source: <a target="_blank" href="http://www.guttmacher.org/datacenter/table.jsp#">Guttmacher Institute</a>
     </p>
   </div>
@@ -590,7 +591,7 @@ app.directive('lineChart',
         var path2 = svg.append("path").attr("class", "heldLine")
 
         var path = svg.append("path").attr("class","line")
-        
+
         var yAxisG = svg.append("g")
           .attr("class", "y axis")
 
