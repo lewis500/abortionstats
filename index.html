@@ -135,6 +135,7 @@ span {
 }
 .btn-group-vertical button {
   max-width: 150px;
+  pointer-events: hover;
   /*line-height: 1*/
 }
 </style>
@@ -173,9 +174,11 @@ span {
     </div>
     <div map-vis></div>
 
+    <hr>
+    <!-- <hr> -->
     
     <div line-chart>
-      <h4 style="position: absolute; left: 75px; top: 575px; color: black;">Abortions per 1,000 women aged 15-44*</h4>
+      <h4 style="position: absolute; left: 75px; top: 615px; color: black;">Abortions per 1,000 women aged 15-44*</h4>
     </div>
     <p style="float: left; margin-left: 40px;">*Numbers are based on state where abortion occurred, not necessarily where the patient is from.</p>
     <p style="float: right;">Source: <a target="_blank" href="http://www.guttmacher.org/datacenter/table.jsp#">Guttmacher Institute</a>
@@ -242,7 +245,7 @@ var legendTitleText = {
   counseling: "Does pre-abortion counseling include information designed to discourage abortion?",
   parents: "How involved must the parents be when minors seek abortions?",
   "public": "When may the state fund medically necessary abortions?",
-  age: "When is the latest a woman can receive an abortion unles her life or health are endangered?",
+  age: "When is the latest a woman can receive an abortion unless her life or health are endangered?",
   partial: "At what stage in pregnancy is partial-birth abortion prohibited?"
 };
 
