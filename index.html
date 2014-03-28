@@ -145,13 +145,14 @@ span {
   <!-- </div> -->
   <div style="width: 620px;">
     <h4 style="text-align:center;">Abortion Restrictions</h4>
-    <div class="btn-group-vertical" style="position: absolute; left: 450px; top: 100px;">
+    <div class="btn-group-vertical" style="position: absolute; left: 450px; top: 85px;">
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'counseling'" >
         Counseling</button>
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'parents'">Parental
         Involvement</button>
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'public'">Public 
        Funding</button>
+       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'waiting'">Waiting Period</button>
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'age'" >Later Abortion</button>
       <button type="button" class="btn btn-primary" ng-model="which" btn-radio="'partial'" >Partial-Birth</button>
 
@@ -173,11 +174,15 @@ span {
 
 <script>
 var legendKey = {
+  waiting: {
+    0: "No waiting period",
+    1: "18 hours or day before",
+    2: "24 hours",
+    3: "72 hours"
+  },
   counseling: {
-    0: "No restriciton",
-    1: "Mandated counseling w/ info designed to discourage abortion",
-    2: "Waiting period b/w counseling and abortion",
-    3: "In-person counseling + waiting period necessitates two trips"
+    0: "No",
+    1: "Yes"
   },
   parents: {
     0: "No restriction",
@@ -188,7 +193,7 @@ var legendKey = {
   },
   "public": {
     0: "Most or all medically necessary abortions",
-    1: "Life endangerment, rape, incest or other circumstances",
+    1: "Life endangerment, rape, incest or other limited circumstances",
     2: "Life endangerment, rape, or incest"
   },
   age: {
@@ -207,7 +212,8 @@ var legendKey = {
 };
 
 var legendTitleText = {
-  counseling: "What degree of pre-abortion counseling is required?",
+  waiting: "What waiting period is required between pre-abortion counseling and the procedure?",
+  counseling: "Does pre-abortion counseling include information designed to discourage abortion?",
   parents: "For a minor (under 18), seeking an abortion, how involved must the parents be?",
   "public": "Under what circumstances can abortions be funded by public health programs?",
   age: "At what stage in pregnancy is abortion limited to cases of life or health endangerment?",
