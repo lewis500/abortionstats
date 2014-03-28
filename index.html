@@ -224,7 +224,7 @@ var legendKey = {
   },
   age: {
     0: "No time restriction",
-    1: "Viability",
+    1: "Viability of fetus",
     2: "Third trimester",
     3: "24 weeks",
     4: "20 weeks"
@@ -240,9 +240,9 @@ var legendKey = {
 var legendTitleText = {
   waiting: "What waiting period is required between pre-abortion counseling and the procedure?",
   counseling: "Does pre-abortion counseling include information designed to discourage abortion?",
-  parents: "How involved must the parents be of minors seeking abortions?",
+  parents: "How involved must the parents be when minors seek abortions?",
   "public": "When may the state fund medically necessary abortions?",
-  age: "At what stage in pregnancy is abortion limited to cases of life or health endangerment?",
+  age: "When is the latest a woman can receive an abortion unles her life or health are endangered?",
   partial: "At what stage in pregnancy is partial-birth abortion prohibited?"
 };
 
@@ -412,7 +412,7 @@ app.directive('mapVis', function() {
         .attr("width", 14)
         .attr("height", 14)
         .attr("stroke","black")
-        .attr("stroke-width",.5)
+        .attr("stroke-width",1)
         .style("fill", color);
 
       var legendText = legend.append("text")
@@ -641,6 +641,7 @@ app.directive('lineChart',
             height: 15,
             fill: "none",
             "stroke-width": 2,
+
             y: 5,
             stroke: "#333",
             "stroke-dasharray": "3, 3"
