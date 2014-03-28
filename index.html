@@ -330,11 +330,11 @@ app.directive('mapVis', function() {
       var svg = d3.select(el[0]).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
-        .attr("cursor","pointer")
 
       var background = svg.append("g")
           .attr("transform","translate(" + [90, 280] + ")")
           .attr("class","selected")
+          .attr("cursor", "pointer")
           .on("mouseover", function(d){
             scope.$apply(function(v){
               scope.state = "US";
@@ -385,7 +385,8 @@ app.directive('mapVis', function() {
         .attr("d", GeoPath)
         .attr("fill", function(d) {
           return color(d.properties[scope.which]);
-        });
+        })
+        .attr("cursor","pointer")
         // .attr("stroke", "black")
         // .attr("stroke-width", "2px")
         // .attr("stroke-opacity", 0.2)
