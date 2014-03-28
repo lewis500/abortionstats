@@ -13,7 +13,7 @@ body {
 }
 
 .background {
-  fill: none;
+  fill: #428bca;
   pointer-events: all;
 }
 /*#states .active {
@@ -99,13 +99,21 @@ span {
 }
 
 .selected{
-    fill: none;
-  stroke-width: 2px;
-  stroke: #fff;
+  fill: none;
+  stroke-width: 3px;
+  stroke: #333;
   stroke-opacity: 1;
+  stroke-linejoin: round;
+
   /*stroke-dasharray: 3,3;*/
   stroke-linejoin: round;
 
+}
+
+.selectedUS{
+  stroke-width: 3px;
+  stroke: #333;
+  stroke-opacity: 1;
 }
 
 .hovered{
@@ -306,23 +314,39 @@ app.directive('mapVis', function() {
         .attr("height", height + margin.top + margin.bottom)
         .attr("cursor","pointer")
 
-      var background = svg.append("rect")
-          .attr("class", "background")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-        .on("mouseover", function(d){
-          scope.$apply(function(v){
-            scope.state = "US";
-          })
-        }).on("click", function(d) {
+      var background = svg.append("g")
+          .attr("transform","translate(" + [90, 280] + ")")
+          .attr("class","selectedUS")
+          .on("mouseover", function(d){
+            scope.$apply(function(v){
+              scope.state = "US";
+            })
+          }).on("click", function(d) {
+            d3.select(".selected").remove();
 
-          d3.select(".selected").remove();
+            d3.select(this).classed("selectedUS", true)
 
-        scope.$apply(function() {
-          scope.heldState = "US";
+          scope.$apply(function() {
+            scope.heldState = "US";
+          });
+
         });
+      
+      background.append("rect")
+          .attr("class", "background")
+          .attr("width", 80)
+          .attr("height", 30)
+          .attr("rx", 4)
+          .attr("ry",4)
 
-      });
+      background.append("text").text("US Total")
+        .attr({
+          fill: "#fff",
+          stroke: "none",
+          y: 21,
+          x: 7,
+          "font-size": 18
+        });
 
       var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -374,6 +398,8 @@ app.directive('mapVis', function() {
       stateG.on("click", function(d) {
 
         d3.select(".selected").remove();
+        d3.select(".selectedUS").classed("selectedUS", false);
+
         g.datum(d)
           .append("path")
           // .attr("class", "state-area")
